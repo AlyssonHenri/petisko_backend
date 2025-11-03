@@ -5,7 +5,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from core.models import User
 from core.serializers import UserSerializer
-# Create your views here.
 
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()

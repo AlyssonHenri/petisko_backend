@@ -25,9 +25,6 @@ SECRET_KEY = 'django-insecure-o&$g_a+xils--*m3bm+wuf3baro_a36bx8*k^lc26hq!3^va30
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -39,7 +36,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "core",
     "rest_framework",
-    "rest_framework.authtoken"
+    "rest_framework.authtoken",
+    "corsheaders"
 ]
 
 MIDDLEWARE = [
@@ -50,6 +48,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'petisko.urls'
@@ -68,6 +68,14 @@ TEMPLATES = [
         },
     },
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://localhost:8000',
+    "https://127.0.0.1:8000"
+]
+
+CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = ['*']
 
 WSGI_APPLICATION = 'petisko.wsgi.application'
 
