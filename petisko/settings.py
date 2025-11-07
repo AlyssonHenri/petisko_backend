@@ -77,6 +77,16 @@ TEMPLATES = [
     },
 ]
 
+DJOSER = {
+    'USER_ID_FIELD': 'id',
+    'LOGIN_FIELD': 'username',
+    'SERIALIZERS': {
+        'user_create': 'core.serializers.UserSerializer',
+        'user': 'core.serializers.UserSerializer',
+        'current_user': 'core.serializers.UserSerializer',
+    },
+}
+
 CORS_ALLOWED_ORIGINS = [
     'https://localhost:8000',
     "https://127.0.0.1:8000"
