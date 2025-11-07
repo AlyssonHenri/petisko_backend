@@ -10,6 +10,6 @@ class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    @permission_classes([AllowAny])
+    @permission_classes([IsAuthenticated])
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
