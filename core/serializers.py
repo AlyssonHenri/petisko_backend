@@ -1,3 +1,5 @@
+from rest_framework import serializers
+from core.models import User
 
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
