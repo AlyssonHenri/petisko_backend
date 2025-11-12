@@ -26,9 +26,10 @@ class UserView(viewsets.ModelViewSet):
         else:
             return Response({"detail": "Not authorized."}, status=403)
 
-    #patch
-    def partial_update(self, request, *args, **kwargs):
-        if str(request.user.id) == kwargs['pk']:
-            return super().partial_update(request, *args, **kwargs)
-        else:
-            return Response({"detail": "Not authorized."}, status=403)
+    @action(detail=False, methods=['patch'], permission_classes=[IsAuthenticated])
+    def update_me(self, request):
+        instance = request.user
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
