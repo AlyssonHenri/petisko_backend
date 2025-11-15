@@ -21,7 +21,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(blank=True)
     name = models.CharField(max_length=100, blank=False)
-    cpf = models.CharField(max_length=20, blank=False)
+    cpf = models.CharField(max_length=20, blank=False, unique=True)
     state = models.CharField(max_length=100, blank=False)
     city = models.CharField(max_length=100, blank=False)
     img = models.ImageField(upload_to=upload_img, blank=True)
