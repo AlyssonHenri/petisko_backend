@@ -9,10 +9,12 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
+    img = serializers.ImageField(required=False, allow_null=True)
+
 
     class Meta:
         model = User
-        fields = ["id", "username", "password", "name", "cpf", "state", "city"]
+        fields = ["id", "username", "password", "name", "cpf", "state", "city", "img"]
         extra_kwargs = {'password': {'write_only': True}}
         
     def create(self, validated_data):
