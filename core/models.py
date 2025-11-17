@@ -18,8 +18,9 @@ class UserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
+    id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(blank=True)
+    email = models.EmailField(blank=True, unique=True)
     name = models.CharField(max_length=100, blank=False)
     cpf = models.CharField(max_length=20, blank=False, unique=True)
     state = models.CharField(max_length=100, blank=False)
@@ -36,3 +37,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     #def __str__(self):
     #    return f"{self}"
+
+class Pet(models.Model):
+    tutor = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, blank=False)
+    birthdate = models.DateField(blank=False, null=False)
+    img1 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
+    img2 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
+    img3 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
+    img4 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
+    vacinado = models.BooleanField(default=False)
+    sexo = models.CharField(max_length=1, blank=False, choices=(('m', 'MASCULINO'),('f', 'FEMININO')))
+    raça = models.CharField(max_length=20, blank=False)
+
