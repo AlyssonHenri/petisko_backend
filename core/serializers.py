@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import User
+from core.models import User, Pet
 
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,4 +29,14 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+    
+
+class PetSerializer(serializers.HyperlinkedModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Pet
+        fields = '__all__'
+        extra_kwargs = {'tutor': {'read_only': True}}
+
 
