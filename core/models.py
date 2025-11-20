@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(blank=True, unique=True)
+    #email = models.EmailField(blank=True, unique=True)
     name = models.CharField(max_length=100, blank=False)
     cpf = models.CharField(max_length=20, blank=False, unique=True)
     state = models.CharField(max_length=100, blank=False)
