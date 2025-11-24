@@ -38,6 +38,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     #def __str__(self):
     #    return f"{self}"
 
+class Vacina(models.Model):
+    vacina = models.CharField(max_length=100, blank=False)
+
 class Pet(models.Model):
     tutor = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=False)
@@ -46,7 +49,9 @@ class Pet(models.Model):
     img2 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img3 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img4 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
-    vacinado = models.BooleanField(default=False)
     sexo = models.CharField(max_length=1, blank=False, choices=(('m', 'MASCULINO'),('f', 'FEMININO')))
-    raça = models.CharField(max_length=20, blank=False)
+    raca = models.CharField(max_length=20, blank=False)
+    vacina = models.ManyToManyField(Vacina)
+
+
 
