@@ -3,8 +3,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from core.models import User
-from core.serializers import UserSerializer, UserPublicSerializer
+from core.models import User, Pet
+from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer
 
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -33,3 +33,37 @@ class UserView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'], url_path='pets')
+    def pets(self, request, pk=None):
+        pets = Pet.objects.filter(tutor=pk)
+        serializer = PetSerializer(pets, many=True)
+        return Response(serializer.data)
+    @action(detail=True, methods=['post'], url_path='add')
+
+    def create_pet(self, request, pk=None):
+
+        data = request.data.copy()
+        data['tutor'] = pk  # associa o pet ao usuário da URL
+
+        serializer = PetSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+
+        return Response(serializer.errors, status=400)
+    
+    @action(detail=True, methods=['get'], url_path='pets/(?P<pet_id>[^/.]+)')
+    def pet_detail(self, request, pk=None, pet_id=None):
+        try:
+            pet = Pet.objects.get(id=pet_id, tutor_id=pk)
+        except Pet.DoesNotExist:
+            return Response({'detail': 'Pet não encontrado'}, status=404)
+
+        serializer = PetSerializer(pet)
+        return Response(serializer.data)
+
+class PetView(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Pet.objects.all()
+    serializer_class = PetSerializer
