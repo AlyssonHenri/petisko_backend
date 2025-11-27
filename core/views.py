@@ -2,9 +2,11 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 from core.models import User, Pet
 from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import json
 
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -39,17 +41,33 @@ class UserView(viewsets.ModelViewSet):
         pets = Pet.objects.filter(tutor=pk)
         serializer = PetSerializer(pets, many=True)
         return Response(serializer.data)
+    
     @action(detail=True, methods=['post'], url_path='add')
-
     def create_pet(self, request, pk=None):
+        vacinas_json = data.pop('vacinas', '[]')
 
         data = request.data.copy()
         data['tutor'] = pk  # associa o pet ao usuário da URL
 
         serializer = PetSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
+          pet = serializer.save()
+          try:
+                # Parse do JSON (pode vir como lista ou string)
+                if isinstance(vacinas_json, list):
+                    vacinas_nomes = json.loads(vacinas_json[0])
+                else:
+                    vacinas_nomes = json.loads(vacinas_json)
+                
+                for nome in vacinas_nomes:
+                    vacina, created = Vacina.objects.get_or_create(nome=nome)
+                    pet.vacinas.add(vacina)
+                    print(f"{'Criada' if created else 'Vinculada'}: {nome}")
+                    
+          except Exception as e:
+                print(f"⚠️ Erro ao processar vacinas: {e}")
+            
+          return Response(PetSerializer(pet).data, status=201)
 
         return Response(serializer.errors, status=400)
     
