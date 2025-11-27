@@ -44,7 +44,7 @@ class Vacina(models.Model):
 class Pet(models.Model):
     tutor = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=False)
-    age = models.IntegerField(blank=False, null=False)
+    age = models.IntegerField(blank=False, null=False, default=0)
     img1 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img2 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img3 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
