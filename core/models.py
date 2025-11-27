@@ -44,14 +44,14 @@ class Vacina(models.Model):
 class Pet(models.Model):
     tutor = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=False)
-    birthdate = models.DateField(blank=False, null=False)
+    age = models.IntegerField(blank=False, null=False)
     img1 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img2 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img3 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     img4 = models.ImageField(upload_to=upload_img, height_field=None, width_field=None, max_length=None)
     sexo = models.CharField(max_length=1, blank=False, choices=(('m', 'MASCULINO'),('f', 'FEMININO')))
     raca = models.CharField(max_length=20, blank=False)
-    vacina = models.ManyToManyField(Vacina)
+    vacinas = models.ManyToManyField(Vacina)
 
 
 
