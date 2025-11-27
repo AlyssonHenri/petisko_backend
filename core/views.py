@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from core.models import User, Pet
+from core.models import User, Pet, Vacina
 from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -44,10 +44,11 @@ class UserView(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='add')
     def create_pet(self, request, pk=None):
-        vacinas_json = data.pop('vacinas', '[]')
 
         data = request.data.copy()
         data['tutor'] = pk  # associa o pet ao usuário da URL
+
+        vacinas_json = data.pop('vacinas', '[]')
 
         serializer = PetSerializer(data=data)
         if serializer.is_valid():
