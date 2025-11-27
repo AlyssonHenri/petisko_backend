@@ -41,7 +41,7 @@ class PetSerializer(serializers.HyperlinkedModelSerializer):
 
     vacinas = serializers.SlugRelatedField(
         many=True,
-        slug_field='nome',  # ou o campo que identifica a vacina
+        slug_field='vacina',  # ou o campo que identifica a vacina
         queryset=Vacina.objects.all()
     )
 
