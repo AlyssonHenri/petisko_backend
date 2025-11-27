@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import User, Pet
+from core.models import User, Pet, Vacina
 
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,5 +38,11 @@ class PetSerializer(serializers.HyperlinkedModelSerializer):
         model = Pet
         fields = '__all__'
         extra_kwargs = {'tutor': {'read_only': True}}
+
+    vacinas = serializers.SlugRelatedField(
+        many=True,
+        slug_field='nome',  # ou o campo que identifica a vacina
+        queryset=Vacina.objects.all()
+    )
 
 
