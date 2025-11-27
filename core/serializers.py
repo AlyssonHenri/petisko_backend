@@ -34,22 +34,13 @@ class VacinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacina
         fields = ['id', 'vacina'] 
-class PetSerializer(serializers.HyperlinkedModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-
+class PetSerializer(serializers.ModelSerializer):
+    vacinas = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Vacina.objects.all(),
+        required=False
+    )
+    
     class Meta:
         model = Pet
         fields = '__all__'
-        extra_kwargs = {'tutor': {'read_only': True}}
-    
-    def create(self, validated_data):
-        vacinas_data = validated_data.pop('vacinas')
-        pet = Pet.objects.create(**validated_data)
-        
-        for vacina_data in vacinas_data:
-            vacina, created = Vacina.objects.get_or_create(**vacina_data)
-            pet.vacinas.add(vacina)
-        
-        return pet
-
-
