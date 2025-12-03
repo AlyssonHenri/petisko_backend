@@ -33,13 +33,10 @@ class UserSerializer(serializers.ModelSerializer):
 class VacinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacina
-        fields = ['id', 'vacina'] 
+        fields = ['id', 'nome'] 
 class PetSerializer(serializers.ModelSerializer):
-    vacinas = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Vacina.objects.all(),
-        required=False
-    )
+    vacinas = VacinaSerializer(many=True, read_only=True)
+
     
     class Meta:
         model = Pet

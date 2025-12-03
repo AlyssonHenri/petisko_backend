@@ -39,7 +39,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     #    return f"{self}"
 
 class Vacina(models.Model):
-    vacina = models.CharField(max_length=100, blank=False)
+    id = models.BigAutoField(primary_key=True)
+    nome = models.CharField(max_length=100, blank=False)
 
 class Pet(models.Model):
     tutor = models.ForeignKey(User, on_delete=models.CASCADE)

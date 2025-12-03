@@ -29,6 +29,7 @@ router.register(r"pets", PetView, basename="pet")
 
 
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include(router.urls)),
