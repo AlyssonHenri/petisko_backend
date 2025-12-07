@@ -56,3 +56,20 @@ class Pet(models.Model):
 
 
 
+
+
+
+class Match(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    petPrincipal = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='meus_matches')
+    petMatch = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='matches_recebidos')
+
+class Blocked(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    petPrincipal = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='meus_bloqueios')
+    petBlock = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='bloqueios_recebidos')
+
+
+
+
+

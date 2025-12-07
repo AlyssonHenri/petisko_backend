@@ -2,10 +2,11 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from core.models import User, Pet, Vacina
-from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer
+from core.models import User, Pet, Vacina, Match
+from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer, MatchSerializer, UnmatchSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db.models import Q 
 import json
 
 class UserView(viewsets.ModelViewSet):
@@ -135,52 +136,67 @@ class UserView(viewsets.ModelViewSet):
             pet.delete()
             return Response(status=204)
 
+
+    @action(detail=True, methods=['get', 'post'], url_path='pets/(?P<pet_id>[^/.]+)/matches')
+    def match_pets(self, request, pk=None, pet_id=None):
+        try:
+            pet = Pet.objects.get(id=pet_id, tutor_id=pk)
+        except Pet.DoesNotExist:
+            return Response({'detail': 'Pet não encontrado'}, status=404)
+        
+        if request.method == 'GET':
+            # Pega todos os matches (iniciados e recebidos)
+            matches = Match.objects.filter(
+                Q(petPrincipal=pet) | Q(petMatch=pet)
+            )
+            serializer = MatchSerializer(matches, many=True) 
+            return Response(serializer.data)
+            
+        elif request.method == 'POST':
+            data = request.data.copy()
+            data['petPrincipal'] = pet_id  
+
+            serializer = MatchSerializer(data=data)
+            if serializer.is_valid():
+                match = serializer.save()
+                return Response(MatchSerializer(match).data, status=201)
+
+            return Response(serializer.errors, status=400)
+
+    @action(detail=True, methods=['get', 'post'], url_path='pets/(?P<pet_id>[^/.]+)/unmatches')
+    def unmatch_pets(self, request, pk=None, pet_id=None):
+        try:
+            pet = Pet.objects.get(id=pet_id, tutor_id=pk)
+        except Pet.DoesNotExist:
+            return Response({'detail': 'Pet não encontrado'}, status=404)
+        
+        if request.method == 'GET':
+            matches = Match.objects.filter(
+                Q(petPrincipal=pet) | Q(petBlock=pet)
+            )
+            serializer = MatchSerializer(matches, many=True) 
+            return Response(serializer.data)
+            
+        elif request.method == 'POST':
+            data = request.data.copy()
+            data['petPrincipal'] = pet_id  
+
+            serializer = UnmatchSerializer(data=data)
+            if serializer.is_valid():
+                match = serializer.save()
+                return Response(UnmatchSerializer(match).data, status=201)
+
+            return Response(serializer.errors, status=400)
+    
+
 class PetView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        
-
-        data = request.data.copy()
-        vacinas_json = data.pop('vacinas', None)
-        
-        print(f"🔍 vacinas_json: {vacinas_json}")
-        
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        if vacinas_json is not None:
-            try:
-                if isinstance(vacinas_json, str):
-                    vacinas_nomes = json.loads(vacinas_json)
-                elif isinstance(vacinas_json, list) and len(vacinas_json) > 0:
-                    vacinas_nomes = json.loads(vacinas_json[0]) if isinstance(vacinas_json[0], str) else vacinas_json
-                else:
-                    vacinas_nomes = vacinas_json
-                
-                print(f"📋 Vacinas parseadas: {vacinas_nomes}")
-                
-                instance.vacinas.clear()
-                
-                for v in vacinas_nomes:
-                    nome_vacina = v.get("nome") if isinstance(v, dict) else str(v)
-                    if not nome_vacina:
-                        continue
-                    vacina, created = Vacina.objects.get_or_create(nome=nome_vacina)
-                    instance.vacinas.add(vacina)
                     
-            except Exception as e:
-                print(f"⚠️ Erro ao processar vacinas: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        return Response(PetSerializer(instance).data)
-    
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return self.update(request, *args, **kwargs)
+class MatchView(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Match.objects.all()
+    serializer_class = MatchSerializer
+
+  

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import User, Pet, Vacina
+from core.models import User, Pet, Vacina, Match
 
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,10 +34,23 @@ class VacinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacina
         fields = ['id', 'nome'] 
+
+class MatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Match
+        fields = ['id', 'petPrincipal', 'petMatch']
+
+
+class UnmatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Match
+        fields = ['id', 'petPrincipal', 'petBlock']
+
 class PetSerializer(serializers.ModelSerializer):
     vacinas = VacinaSerializer(many=True, read_only=True)
 
-    
     class Meta:
         model = Pet
         fields = '__all__'
+
+
