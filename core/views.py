@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from core.models import User, Pet, Vacina, Match
+from core.models import User, Pet, Vacina, Match, Blocked
 from core.serializers import UserSerializer, UserPublicSerializer, PetSerializer, MatchSerializer, UnmatchSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -22,7 +22,6 @@ class UserView(viewsets.ModelViewSet):
             serializer = UserPublicSerializer(instance)
         return Response(serializer.data)
 
-    #put    
     def update(self, request, *args, **kwargs): 
         if str(request.user.id) == kwargs['pk']:
             return super().update(request, *args, **kwargs)
@@ -45,17 +44,15 @@ class UserView(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='add')
     def create_pet(self, request, pk=None):
-
         data = request.data.copy()
-        data['tutor'] = pk  # associa o pet ao usuário da URL
+        data['tutor'] = pk
 
         vacinas_json = data.pop('vacinas', '[]')
 
         serializer = PetSerializer(data=data)
         if serializer.is_valid():
-          pet = serializer.save()
-          try:
-                # Parse do JSON (pode vir como lista ou string)
+            pet = serializer.save()
+            try:
                 if isinstance(vacinas_json, list):
                     vacinas_nomes = json.loads(vacinas_json[0])
                 else:
@@ -68,14 +65,13 @@ class UserView(viewsets.ModelViewSet):
                     vacina, created = Vacina.objects.get_or_create(nome=nome_vacina)
                     pet.vacinas.add(vacina)
                     
-          except Exception as e:
+            except Exception as e:
                 print(f"⚠️ Erro ao processar vacinas: {e}")
             
-          return Response(PetSerializer(pet).data, status=201)
+            return Response(PetSerializer(pet).data, status=201)
 
         return Response(serializer.errors, status=400)
     
-
     @action(detail=True, methods=['get', 'patch', 'delete'], url_path='pets/(?P<pet_id>[^/.]+)')
     def pet_detail(self, request, pk=None, pet_id=None):
         try:
@@ -88,7 +84,6 @@ class UserView(viewsets.ModelViewSet):
             return Response(serializer.data)
 
         elif request.method == 'PATCH':
-            print('oi')
             data = request.data.copy()
             vacinas_json = data.pop('vacinas', None)
             
@@ -97,18 +92,14 @@ class UserView(viewsets.ModelViewSet):
             if serializer.is_valid():
                 pet = serializer.save()
                 
-                # Só processa vacinas se foram enviadas
                 if vacinas_json is not None:
                     try:
-                        # Parse do JSON string
                         if isinstance(vacinas_json, str):
                             vacinas_nomes = json.loads(vacinas_json)
                         elif isinstance(vacinas_json, list) and len(vacinas_json) > 0:
-                            # Se vier como lista com string JSON dentro
                             vacinas_nomes = json.loads(vacinas_json[0]) if isinstance(vacinas_json[0], str) else vacinas_json
                         else:
                             vacinas_nomes = vacinas_json
-
 
                         pet.vacinas.clear()
                         
@@ -137,66 +128,77 @@ class UserView(viewsets.ModelViewSet):
             return Response(status=204)
 
 
-    @action(detail=True, methods=['get', 'post'], url_path='pets/(?P<pet_id>[^/.]+)/matches')
-    def match_pets(self, request, pk=None, pet_id=None):
-        try:
-            pet = Pet.objects.get(id=pet_id, tutor_id=pk)
-        except Pet.DoesNotExist:
-            return Response({'detail': 'Pet não encontrado'}, status=404)
-        
-        if request.method == 'GET':
-            # Pega todos os matches (iniciados e recebidos)
-            matches = Match.objects.filter(
-                Q(petPrincipal=pet) | Q(petMatch=pet)
-            )
-            serializer = MatchSerializer(matches, many=True) 
-            return Response(serializer.data)
-            
-        elif request.method == 'POST':
-            data = request.data.copy()
-            data['petPrincipal'] = pet_id  
-
-            serializer = MatchSerializer(data=data)
-            if serializer.is_valid():
-                match = serializer.save()
-                return Response(MatchSerializer(match).data, status=201)
-
-            return Response(serializer.errors, status=400)
-
-    @action(detail=True, methods=['get', 'post'], url_path='pets/(?P<pet_id>[^/.]+)/unmatches')
-    def unmatch_pets(self, request, pk=None, pet_id=None):
-        try:
-            pet = Pet.objects.get(id=pet_id, tutor_id=pk)
-        except Pet.DoesNotExist:
-            return Response({'detail': 'Pet não encontrado'}, status=404)
-        
-        if request.method == 'GET':
-            matches = Match.objects.filter(
-                Q(petPrincipal=pet) | Q(petBlock=pet)
-            )
-            serializer = MatchSerializer(matches, many=True) 
-            return Response(serializer.data)
-            
-        elif request.method == 'POST':
-            data = request.data.copy()
-            data['petPrincipal'] = pet_id  
-
-            serializer = UnmatchSerializer(data=data)
-            if serializer.is_valid():
-                match = serializer.save()
-                return Response(UnmatchSerializer(match).data, status=201)
-
-            return Response(serializer.errors, status=400)
-    
-
 class PetView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
+
+    @action(detail=True, methods=['get', 'post'], url_path='matches')
+    def matches(self, request, pk=None):
+
+        try:
+            pet = Pet.objects.get(id=pk)  # pk é o ID do pet
+        except Pet.DoesNotExist:
+            return Response({'detail': 'Pet não encontrado'}, status=404)
+        
+        if pet.tutor != request.user:
+            return Response({'detail': 'Não autorizado'}, status=403)
+        
+        if request.method == 'GET':
+            matches = Match.objects.filter(
+                Q(petPrincipal=pet) | Q(petMatch=pet)
+            )
+            serializer = MatchSerializer(matches, many=True)
+            return Response(serializer.data)
+            
+        elif request.method == 'POST':
+            data = request.data.copy()
+            data['petPrincipal'] = pk  # pk é o ID do pet
+            
+            serializer = MatchSerializer(data=data)
+            if serializer.is_valid():
+                match = serializer.save()
+                return Response(MatchSerializer(match).data, status=201)
+            
+            return Response(serializer.errors, status=400)
+
+    @action(detail=True, methods=['get', 'post'], url_path='blocked')
+    def blocked(self, request, pk=None):
+
+        try:
+            pet = Pet.objects.get(id=pk)  # pk é o ID do pet
+        except Pet.DoesNotExist:
+            return Response({'detail': 'Pet não encontrado'}, status=404)
+        
+        if pet.tutor != request.user:
+            return Response({'detail': 'Não autorizado'}, status=403)
+        
+        if request.method == 'GET':
+            blocked = Blocked.objects.filter(
+                Q(petPrincipal=pet) | Q(petBlock=pet) 
+            )
+            serializer = UnmatchSerializer(blocked, many=True)
+            return Response(serializer.data)
+            
+        elif request.method == 'POST':
+            data = request.data.copy()
+            data['petPrincipal'] = pk  # pk é o ID do pet
+            
+            serializer = UnmatchSerializer(data=data)
+            if serializer.is_valid():
+                blocked = serializer.save()
+                return Response(UnmatchSerializer(blocked).data, status=201)
+            
+            return Response(serializer.errors, status=400)
+
                     
 class MatchView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
 
-  
+
+class BlockedView(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Blocked.objects.all()
+    serializer_class = UnmatchSerializer

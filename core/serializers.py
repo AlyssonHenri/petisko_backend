@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import User, Pet, Vacina, Match
+from core.models import User, Pet, Vacina, Match, Blocked
 
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,7 +43,7 @@ class MatchSerializer(serializers.ModelSerializer):
 
 class UnmatchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Match
+        model = Blocked
         fields = ['id', 'petPrincipal', 'petBlock']
 
 class PetSerializer(serializers.ModelSerializer):
